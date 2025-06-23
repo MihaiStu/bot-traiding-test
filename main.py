@@ -1,22 +1,26 @@
 import os
-import requests
-from time import sleep
+import asyncio
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-CHAT_ID = os.environ.get("CHAT_ID")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 
-def send_telegram_message(text):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": CHAT_ID, "text": text}
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        print("Mensaje enviado con éxito")
-    except requests.exceptions.RequestException as e:
-        print(f"Error al enviar mensaje: {e}")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("✅ Bot en modo test activado. Esperando operaciones...")
 
-if __name__ == "__main__":
-    print("Bot en modo test iniciado...")
-    send_telegram_message("✅ Bot de trading activo en modo test.\nTodo listo para operar.")
+async def simulate_operations():
     while True:
-        sleep(3600)  # Mantiene el bot vivo para pruebas (1h por ciclo)
+        print("Simulando operación...")
+        await asyncio.sleep(10)
+
+async def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+
+    # Ejecutar el bot y las simulaciones en paralelo
+    asyncio.create_task(simulate_operations())
+    await app.run_polling()
+
+if __name__ == '__main__':
+    asyncio.run(main())
